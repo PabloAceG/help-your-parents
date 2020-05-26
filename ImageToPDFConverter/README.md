@@ -12,13 +12,16 @@ to convert an image to a PDF... so I thought... why not?
 
 ![](https://github.com/PabloAceG/help-your-parents/blob/master/ImageToPDFConverter/images/computer.jpg)
 
-### Prerequisites
+### Requirements
 
 You need to have installed:
 - [Python](https://www.python.org/downloads/) - I use the 3.7, son anything 
 after that should do.
-- [Python Pillow](https://python-pillow.org/) - run `pip install Pillow` on 
-your command shell (`Bash`, `Cmd`, ...) after having Python installed. 
+
+Afterwards, run on the command shell:
+```bash
+pip install -r requirements.txt
+```
 
 ![](https://github.com/PabloAceG/help-your-parents/blob/master/ImageToPDFConverter/images/pillow.jpg)
 

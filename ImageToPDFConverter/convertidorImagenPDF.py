@@ -1,3 +1,32 @@
+""" This module implements an image convertor to PDF files.
+
+After converting the images to PDF, all the images in the same folder are 
+compressed to a ZIP file.
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+You should have received a copy of the GNU General Public License along with
+this program. If not, see <http://www.gnu.org/licenses/>.
+"""
+
+__author__ = "Pablo Acereda García"
+__authors__ = ["Pablo Acereda García"]
+__contact__ = "p.aceredag@gmail.com"
+__copyright__ = "Copyright 2020"
+__credits__ = ["Pablo Acereda García"]
+__date__ = "2020/04/09"
+__deprecated__ = False
+__email__ =  "p.aceredag@gmail.com"
+__license__ = "GPLv3"
+__maintainer__ = "Pablo Acereda García"
+__status__ = "Development"
+__version__ = "0.0.1"
+
 import os
 import zipfile
 
@@ -6,9 +35,13 @@ from os.path  import isfile, join
 from PIL      import Image
 from datetime import date
 
-'''
-Welcome message to guide the user and ask for when the file is being executed.
-'''
+"""
+    Welcome message to guide the user and ask for when the file is being
+    executed.
+    Inputs:
+    Outputs:
+        - Call to function that collects necessary information for the program.
+"""
 def welcome_message ():
     print ("Hola buenaaaas!!", end="\n")
     print (
@@ -19,13 +52,18 @@ def welcome_message ():
 
     return ask_for_location ()
 
-'''
-Ask for where the file is being executed.
-If it is not being executed from where the folder to be transformed are,
-it allows the user to insert the path.
-'''
+"""
+    Ask for where the file is being executed.
+    If it is not being executed from where the folder to be transformed are,
+    it allows the user to insert the path.
+    Inputs:
+    Outputs:
+        - path: location from where the folder containing the files are.
+"""
 def ask_for_location ():
-    in_directory = input ("¿Está el archivo que estás ejecutando en el mismo lugar que las carpetas con los ficheros que quieres convertir a PDF? (s/n) ")
+    text = "¿Está el archivo que estás ejecutando en el mismo lugar que \
+las carpetas con los ficheros que quieres convertir a PDF? (s/n) "
+    in_directory = input (text)
 
     valid_path = False 
     
@@ -47,7 +85,7 @@ def ask_for_location ():
                     print ("Voy a tener que pedirte algo más...", end="\n\n")
                     # Ask for path to user
                     path = input (
-                        "¿Dónde se encuentran las carpetas de las que vamos ", 
+                        "¿Dónde se encuentran las carpetas de las que vamos ",
                         "a transformar luego las imágenes a PDF?"
                     )
                     # Logging message
@@ -68,9 +106,11 @@ def ask_for_location ():
 
     return path + "/"
 
-'''
-Folders that the user want to get as transformed
-'''
+"""
+    Folders that the user want to get as transformed.
+    Inputs:
+    Outputs:
+"""
 def folders_to_transform ():
     number_folders = 0
     folders = [ ]
@@ -93,7 +133,10 @@ def folders_to_transform ():
     i = 0
     while i < number_folders:
         try:
-            new_folder = input ("Dime el nombre de la {}º carpeta\n".format (i + 1))
+            new_folder = input ( \
+                "Dime el nombre de la {}º carpeta\n"
+                    .format (i + 1)
+            )
 
             folders.append(new_folder + "/")
             i += 1
@@ -102,9 +145,12 @@ def folders_to_transform ():
 
     return folders
 
-''' 
-Print the current working directory
-'''
+""" 
+    Print the current working directory.
+    Inputs:
+        - path: where to find the files.
+    Outputs:
+"""
 def print_directory (path):
     print(end="\n")
     print("==============================", end="\n")
@@ -113,9 +159,12 @@ def print_directory (path):
     print("==============================", end="\n")
     print(end="\n")
 
-''' 
-Print the moving to dir
-'''
+"""
+    Print the moving to dir
+    Inputs:
+        - path: where to find the files.
+    Outputs:
+"""
 def print_move_to_path (path):
     print(end="\n")
     print("--------------------", end="\n")
@@ -123,9 +172,14 @@ def print_move_to_path (path):
     print("--------------------", end="\n")
     print(end="\n")
 
-'''
-Retrieves and prints the name of the files for a given directory
-'''
+"""
+    Retrieves and prints the name of the files for a given directory.
+    Inputs:
+        - path: where to find the files.
+    Outputs:
+        - files: Array containing the files in the specified path (non 
+            recursive).
+"""
 def get_files_names_directory (path):
     # Retrive files from path
     files = [ f for f in listdir (path) 
@@ -141,14 +195,19 @@ def get_files_names_directory (path):
 
     return files
 
-'''
-Transform an Image file to a PDF
-'''
+"""
+    Transforms Image files to a PDFs.
+    Inputs:
+        - path: where to find the files.
+        - files: images to be converted to PDF files.
+    Outputs:
+"""
 def transform_file_to_pdf (path, files):
     for f in files:
         file_format          = f[len (f) - 3 : ].lower ()
         file_format_extended = f[len (f) - 4 : ].lower ()
-        if file_format in ( "bmp", "jpg", "gif", "png") or file_format_extended in ( "jpeg", "jfif", "tiff" ):
+        if file_format in ( "bmp", "jpg", "gif", "png") or \
+           file_format_extended in ( "jpeg", "jfif", "tiff" ):
             #Log message
             print ("Transformando fichero {}".format (f), end="\n")
 
@@ -163,15 +222,27 @@ def transform_file_to_pdf (path, files):
             os.remove (path_to_file)
         else:
             print (
-                "El fichero {} no ha sido incluido, no es una imagen.".format (f),
+                "El fichero {} no ha sido incluido, no es una imagen."
+                    .format (f),
                 end="\n" 
             )
             print ("format: {}".format (file_format))
             print ("format: {}".format (file_format_extended))
 
     
-    print ("Transformación completa de los ficheros en la ruta {}".format (path))
+    print (
+        "Transformación completa de los ficheros en la ruta {}"
+            .format (path)
+    )
 
+"""
+    Comprosses the PDF files containing the images into a ZIP file named after
+    the directory contining the files and the current date.
+    Inputs:
+        - path: where to find the files.
+        - files: images to be converted to PDF files.
+    Outputs:
+"""
 def compress_to_zip (path, files):
     directory = path.split("/")
     directory = directory [len (directory) - 2]
@@ -203,9 +274,9 @@ def compress_to_zip (path, files):
     # Loggin message
     print ("Fichero comprimido {} creado".format (filename))
         
-''' 
-Main class execution
-'''
+"""
+    Main class execution.
+"""
 if __name__ == "__main__":
     father_directory = welcome_message ()
     folders = folders_to_transform ()
