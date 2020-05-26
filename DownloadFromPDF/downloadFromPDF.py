@@ -30,14 +30,61 @@ __version__ = "0.0.1"
 import pdfminer
 import sys
 import os
+import requests # Make URL request
+import wget # Download files
+
+import configparser # Get configuration
 
 from io import StringIO
+# PDF to text
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.converter import TextConverter
 from pdfminer.layout    import LAParams
 from pdfminer.pdfpage   import PDFPage
+from urlextract import URLExtract # Extract URL from Text
 
-#from pdfminer import extract_text
+"""
+    Uses the configuration.
+    Inputs:
+    Outputs:
+        - path: files location.
+        - files: name of each file.
+"""
+def use_conf_file():
+    text = "Do you want to use the configuration file (parameters.conf)? (y/n) "
+    use_it = input (text)
+
+    valid_answer = False 
+    
+    path = ""
+    files = ""
+
+    while not valid_answer:
+        try:
+            if   ( use_it == "y" ):
+                config = configparser.ConfigParser()
+                config.read('./conf.ini')
+
+                path  = config.get('Location', 'path')
+                files = config.get('Location', 'files_to_read').split("\n")
+
+                valid_answer = True
+
+            elif ( use_it == "n" ):
+                
+                # Location for the file with the links to download
+                path = ask_for_location()
+                # File name
+                files = ask_for_files_name(path)
+
+                valid_answer = True
+                
+            else:
+                print ("Not valid input", end="\n")
+        except:
+            print ("An error ocurred, try again", end="\n")
+
+    return path + '/', files
 
 """
     Ask for where the file is being executed.
@@ -87,32 +134,52 @@ file with the links to download? (y/n) "
         except:
             print ("An error ocurred, try again", end="\n")
 
-    return path + "/"
+    return path
 
 """
-    Ask for the name of a file, checking if it exists within a path.
+    Ask for the name of file, checking if they exist within a path.
     If it is not being executed from where the folder to be transformed are,
-    it allows the user to insert the path.
+    it allows the user to insert a new path.
     Inputs:
-        - path: file's location.
+        - path: files location.
     Outputs:
-        - name: name of the file.
+        - files: name of each file.
 """
-# TODO: Add code to include the .pdf at the end of the name
-def ask_for_name_file(path):
-    valid_name = False 
+def ask_for_files_name(path):
 
     name = ""
 
-    while not valid_name:
+    num_files = 0
+    files = [ ]
+
+    # How many folders are going to be converted
+    correct_number_folders = False
+
+    # Ask for number of files to read
+    while not correct_number_folders:
         try:
-            question = 'What is the name of the file? (without the .pdf) '
+            question = 'How many files in the same path contain links to download? '
+            num_files = input (question)
+            num_files = int (num_files)
+
+            correct_number_folders = True
+        except:
+            print ('Please write a number', end="\n")
+
+    # Ask for the name of those files. Also check they exists.
+    num_files_name = 0
+
+    while num_files_name < num_files:
+        try:
+            question = 'What is the name of the file? '
             name = input(question)
 
             file_exists = os.path.isfile(path + name)
 
             if file_exists:
-                valid_name = True
+                num_files_name += 1
+
+                files += [name]
             else:
                 print (
                     'The file you specified does not exists. Try again.', 
@@ -121,56 +188,22 @@ def ask_for_name_file(path):
         except:
             print ("An error ocurred, try again", end="\n")
 
-    return name
+    return files
 
 """
-    Transforms the content of the PDF to text, so that its content can be 
+    Transforms the content of the PDFs to text, so that its content can be 
     filtered later on.
     Inputs:
-        - path: file's location.
-        - name: name of the file.
+        - path: files location.
+        - files: name of each file.
     Outputs:
-        - text: content of the PDF file on String format.
+        - files_conent: content of each PDF file on String format.
 """
-def convert_to_text(path, name, pages=None):
-    # Content of the PDF
-    text = ""
+def convert_to_text(path, files):
+    # PDF content
+    files_content = [ ]
 
-    if not pages:
-        pagenums = set()
-    else:
-        pagenums = set(pages)
-
-    # Going to store the PDF
-    output = StringIO()
-
-    # Input Streams
-    manager = PDFResourceManager()
-    converter = TextConverter(manager, output, laparams=LAParams())
-    interpreter = PDFPageInterpreter(manager, converter)
-
-    # File and permissions
-    infile = open(path + name, 'rb')
-
-    # Reads pages of the PDF
-    for page in PDFPage.get_pages(infile, pagenums):
-        interpreter.process_page(page)
-    
-    # Transforms content to String
-    text = output.getvalue()
-
-    # Closes input streams
-    infile.close()
-    converter.close()
-    output.close()
-    
-    '''
     try:
-        if not pages:
-            pagenums = set()
-        else:
-            pagenums = set(pages)
-
         # Going to store the PDF
         output = StringIO()
 
@@ -179,15 +212,26 @@ def convert_to_text(path, name, pages=None):
         converter = TextConverter(manager, output, laparams=LAParams())
         interpreter = PDFPageInterpreter(manager, converter)
 
-        # File and permissions
-        infile = open(path + name, 'rb')
+        # Extracts text from all files
+        for name in files:
+            try:
+                # Number of pages    
+                pagenums = set()
 
-        # Reads pages of the PDF
-        for page in PDFPage.get_pages(infile, pagenums):
-            interpreter.process_page(page)
-        
-        # Transforms content to String
-        text = output.getvalue()
+                # File and permissions
+                infile = open(path + name, 'rb')
+
+                # Reads pages of the PDF
+                for page in PDFPage.get_pages(infile, pagenums):
+                    interpreter.process_page(page)
+                
+                # Transforms content to String
+                files_content += [output.getvalue()]
+            except:
+                print(
+                    'An error ocurred parsing {}. Skipping to next file!'
+                        .format(name)
+                )
 
         # Closes input streams
         infile.close()
@@ -197,8 +241,25 @@ def convert_to_text(path, name, pages=None):
     except:
         print('An unexpected error ocurred!')
         sys.exit
-    '''
-    return text
+
+    return files_content
+
+"""
+    Extracts the URLS from the PDFs' text.
+    Inputs:
+        - files_content: content of the PDF file on String format.
+    Outputs:
+        - urls: Array containing the URLs from each text.
+"""
+def extract_urls(files_content):
+    urls = [ ]
+
+    # Extracts URLS for each file's content
+    for text in files_content:
+        extractor = URLExtract()
+        urls += [extractor.find_urls(text)]
+
+    return urls
 
 """
 Main class execution
@@ -209,12 +270,15 @@ if __name__ == "__main__":
     print('Starting download!')
     print('============================================================\n\n')
 
-    # Location for the file with the links to download
-    path = ask_for_location()
-    # File name
-    name = ask_for_name_file(path)
+    # Path and files with the links to download. Posibility of using 
+    # configuration file instead of writing data.
+    path, files = use_conf_file()
 
     # Convert PDF to text to it can be filtered
-    text = convert_to_text(path, name)
+    files_content = convert_to_text(path, files)
 
+    # Extrat URLs from text
+    urls = extract_urls(files_content)
+
+    
     

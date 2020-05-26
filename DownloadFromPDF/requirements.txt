@@ -1,1 +1,7 @@
 pdfminer
+idna
+uritools
+appdirs
+urlextract
+requests
+wget
